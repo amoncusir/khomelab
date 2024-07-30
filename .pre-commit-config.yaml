@@ -1,0 +1,23 @@
+repos:
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.6.0
+  hooks:
+  - id: end-of-file-fixer
+  - id: check-executables-have-shebangs
+  - id: check-shebang-scripts-are-executable
+  - id: check-symlinks
+  - id: detect-aws-credentials
+  - id: detect-private-key
+  - id: requirements-txt-fixer
+
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.16.1
+  hooks:
+  - id: gitleaks
+
+- repo: https://github.com/adrienverge/yamllint.git
+  rev: v1.35.1
+  hooks:
+  - id: yamllint
+#    args: [--strict, -c=/path/to/.yamllint]
