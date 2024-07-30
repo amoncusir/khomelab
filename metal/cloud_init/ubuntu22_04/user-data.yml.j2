@@ -1,0 +1,104 @@
+#cloud-config
+
+autoinstall:
+  version: 1
+  refresh-installer:
+    update: yes
+  network:
+    version: 2
+    ethernets:
+      eth0:
+        match:
+          name: "{{ network.main.match_name }}"
+        set-name: eth0
+        wakeonlan: {{ network.main.wakeonlan }}
+        critical: true
+        addresses:
+        - {{ network.main.principal_ip }}/{{ network.main.cdir_mask }}
+        routes:
+        - to: 0.0.0.0/0
+          via: 192.168.2.1
+          on-link: true
+        nameservers:
+          addresses:
+            - 192.168.2.1
+    vlans:
+      eth0.private:
+        id: 3
+        link: eth0
+        addresses:
+          - {{ network.private.principal_ip }}/{{ network.private.cdir_mask }}
+        routes:
+        - to: {{ network.private.network }}/{{ network.private.cdir_mask }}
+          via: {{ network.private.network_route }}
+      eth0.public:
+        id: 4
+        link: eth0
+        addresses:
+          - {{ network.public.principal_ip }}/{{ network.public.cdir_mask }}
+        routes:
+        - to: {{ network.public.network }}/{{ network.public.cdir_mask }}
+          via: {{ network.public.network_route }}
+  storage:
+    layout:
+      name: lvm
+      sizing-policy: all
+      reset-partition: false
+
+  identity: # Only for physical access
+    hostname: {{ name }}
+    username: {{ name }}
+    password: {{ password }}
+
+  install: true
+  updates: security
+
+  packages:
+  {% for package in apt_packages %}
+  - {{ package }}
+  {% endfor %}
+
+  timezone: Europe/Madrid
+
+  shutdown: reboot
+
+  reporting:
+    builtin:
+      type: print
+
+  ssh:
+    install-server: true
+    allow-pw: false
+
+  user-data:
+    # SSH
+    ssh_pwauth: false
+    disable_root: true
+
+    ssh_publish_hostkeys:
+      enabled: false
+
+    users:
+    - name: {{ ssh_client.username }}
+      groups: sudo, adm, docker, dip, plugdev
+      hashed_passwd: {{ ssh_client.password }}
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      shell: /bin/zsh
+      ssh_authorized_keys:
+      {% for key in ssh_client.ssh_authorized_keys %}
+      - {{ key }}
+      {% endfor %}
+
+    runcmd:
+    - locale-gen "en_US.UTF-8"
+    - echo "LC_ALL=en_US.UTF-8" >> /etc/default/locale
+    - echo "ListenAddress {{ network.main.principal_ip }}" >> /etc/ssh/sshd_config.d/10-internal_ip.conf
+    - echo "MaxRetentionSec=1month" >> /etc/systemd/journald.conf
+    - sudo -u={{ ssh_client.username }} sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    
+    final_message: |
+      cloud-init has finished for {{ name }}!
+      version: $version
+      timestamp: $timestamp
+      datasource: $datasource
+      uptime: $uptime  
