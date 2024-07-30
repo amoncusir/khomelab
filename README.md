@@ -1,6 +1,9 @@
 # khomelab #
 A Kubernates fully-automated homelab setup using K3s 
 
+> IMPORTANT: The project is currently under development and not yet usable. This code originates from another private
+> repository and needs to be refactored to remove specific implementations, making it suitable for broader use cases.
+
 ## Why?
 
 Or, why not? Main reason why had made this repo was to be fun and take experience with those kind of projects.
